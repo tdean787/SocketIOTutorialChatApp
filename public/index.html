@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" href="/style.css" type="text/css" />
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <div class="form-container">
+      <span id="user-typing"></span>
+      <form id="form" action="">
+        <input id="input" autocomplete="off" /><button>Send</button>
+      </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      var messages = document.getElementById("messages");
+      var form = document.getElementById("form");
+      var input = document.getElementById("input");
+      const typing = false;
+      const timeout = undefined;
+      const user;
+      const userTyping = document.querySelector("#user-typing");
+      const userName = prompt("What is your name?");
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit("chat message", input.value);
+          input.value = "";
+        }
+      });
+
+      function onKeyDownNotEnter() {
+        if (typing == false) {
+          typing = true;
+          socket.emit(typingMessage);
+          timeout = setTimeout(timeoutFunction, 5000);
+        } else {
+          clearTimeout(timeout);
+          timeout = setTimeout(timeoutFunction, 5000);
+        }
+      }
+
+      input.addEventListener("keydown", function () {
+        // userTyping.innerHTML = `${userName} is typing...`;
+        onKeyDownNotEnter();
+      });
+      socket.on("chat message", function (msg) {
+        var item = document.createElement("li");
+        item.textContent = userName + ": " + msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+    </script>
+    <!-- <script src="index.js"></script> -->
+  </body>
+</html>
