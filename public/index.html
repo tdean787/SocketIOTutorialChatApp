@@ -5,6 +5,8 @@
     <link rel="stylesheet" href="/style.css" type="text/css" />
   </head>
   <body>
+    <input type="text" name="name" value="" placeholder="Enter your name!" />
+    <button type="button" name="button">Start Chatting!</button>
     <ul id="messages"></ul>
     <div class="form-container">
       <span id="user-typing"></span>
@@ -19,38 +21,47 @@
       var messages = document.getElementById("messages");
       var form = document.getElementById("form");
       var input = document.getElementById("input");
-      const typing = false;
-      const timeout = undefined;
-      const user;
+      let typing = false;
+      let timeout = undefined;
+      let user = undefined;
       const userTyping = document.querySelector("#user-typing");
       const userName = prompt("What is your name?");
 
       form.addEventListener("submit", function (e) {
         e.preventDefault();
+
         if (input.value) {
           socket.emit("chat message", input.value);
           input.value = "";
         }
       });
 
-      function onKeyDownNotEnter() {
-        if (typing == false) {
-          typing = true;
-          socket.emit(typingMessage);
-          timeout = setTimeout(timeoutFunction, 5000);
-        } else {
-          clearTimeout(timeout);
-          timeout = setTimeout(timeoutFunction, 5000);
-        }
+      function timeoutFunction() {
+        typing = false;
+        socket.emit("typing", false);
       }
 
-      input.addEventListener("keydown", function () {
-        // userTyping.innerHTML = `${userName} is typing...`;
-        onKeyDownNotEnter();
+      input.addEventListener("keydown", (event) => {
+        console.log(event);
+        socket.emit("typing", { user: userName, typing: typing });
+        typing = true;
+        clearTimeout(timeout);
+        timeout = setTimeout(timeoutFunction, 2000);
       });
+
+      socket.on("typing", (data) => {
+        if (typing == true) {
+          userTyping.textContent = `${data.user} is typing...`;
+          // console.log("typing received by client");
+          console.log(data);
+        } else {
+          userTyping.textContent = "";
+        }
+      });
+
       socket.on("chat message", function (msg) {
         var item = document.createElement("li");
-        item.textContent = userName + ": " + msg;
+        item.textContent = msg;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
       });
